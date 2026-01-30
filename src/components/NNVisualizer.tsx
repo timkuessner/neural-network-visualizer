@@ -1,0 +1,209 @@
+'use client';
+
+import React, { useState } from 'react';
+
+interface LayerConfig {
+  id: string;
+  size: number;
+}
+
+interface NNVisualizerProps {
+  initialLayers?: LayerConfig[];
+}
+
+export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) {
+  const [layers, setLayers] = useState<LayerConfig[]>(
+    initialLayers.length > 0 
+      ? initialLayers 
+      : [
+          { id: 'input', size: 1 },
+          { id: 'h1', size: 3 },
+          { id: 'h2', size: 3 },
+          { id: 'h3', size: 3 },
+          { id: 'output', size: 1 },
+        ]
+  );
+
+  const addLayer = (index: number) => {
+    const newLayer: LayerConfig = {
+      id: `layer-${Date.now()}`,
+      size: 3,
+    };
+    const newLayers = [...layers];
+    newLayers.splice(index, 0, newLayer);
+    setLayers(newLayers);
+  };
+
+  const removeLayer = (index: number) => {
+    if (layers.length <= 2) return;
+    const newLayers = layers.filter((_, i) => i !== index);
+    setLayers(newLayers);
+  };
+
+  const updateLayerSize = (index: number, newSize: number) => {
+    const clampedSize = Math.max(1, Math.min(8, newSize));
+    const newLayers = layers.map((layer, i) =>
+      i === index ? { ...layer, size: clampedSize } : layer
+    );
+    setLayers(newLayers);
+  };
+
+  const maxNeurons = Math.max(...layers.map(l => l.size));
+  const neuronSize = 40;
+  const layerSpacing = 100;
+  const verticalSpacing = 50;
+
+  return (
+    <div className="w-full min-h-screen bg-white p-8">
+      <h1 className="text-2xl font-light text-gray-800 mb-12 text-center">
+        Neural Network Architecture
+      </h1>
+
+      <div className="flex flex-wrap gap-6 justify-center mb-8">
+        {layers.map((layer, index) => (
+          <div key={layer.id} className="flex flex-col items-center gap-3">
+            <span className="text-xs text-gray-500 font-light">
+              {index === 0 ? 'Input' : index === layers.length - 1 ? 'Output' : `Hidden ${index}`}
+            </span>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => updateLayerSize(index, layer.size - 1)}
+                disabled={index === 0 || index === layers.length - 1 || layer.size <= 1}
+                className="w-7 h-7 rounded border border-gray-300 text-gray-600 disabled:opacity-20 hover:bg-gray-100 transition-colors text-sm"
+              >
+                −
+              </button>
+              <span className="text-gray-700 w-8 text-center font-light">{layer.size}</span>
+              <button
+                onClick={() => updateLayerSize(index, layer.size + 1)}
+                disabled={index === 0 || index === layers.length - 1 || layer.size >= 8}
+                className="w-7 h-7 rounded border border-gray-300 text-gray-600 disabled:opacity-20 hover:bg-gray-100 transition-colors text-sm"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="flex gap-1">
+              {index > 0 && index < layers.length - 1 && (
+                <button
+                  onClick={() => removeLayer(index)}
+                  className="px-3 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:bg-gray-100 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-center gap-3 mb-12">
+        {layers.slice(0, -1).map((_, index) => (
+          <button
+            key={`add-${index}`}
+            onClick={() => addLayer(index + 1)}
+            className="px-4 py-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-100 transition-colors text-sm font-light"
+          >
+            + Layer after {index === 0 ? 'Input' : `H${index}`}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex justify-center overflow-x-auto">
+        <svg
+          width={layers.length * layerSpacing + 100}
+          height={maxNeurons * verticalSpacing + 100}
+          className="border border-gray-200 rounded-lg bg-white"
+        >
+          {layers.map((layer, layerIndex) => {
+            if (layerIndex === layers.length - 1) return null;
+            const nextLayer = layers[layerIndex + 1];
+            
+            const currentX = 50 + layerIndex * layerSpacing;
+            const nextX = 50 + (layerIndex + 1) * layerSpacing;
+            
+            const currentYBase = 50 + (maxNeurons - layer.size) * verticalSpacing / 2;
+            const nextYBase = 50 + (maxNeurons - nextLayer.size) * verticalSpacing / 2;
+
+            return (
+              <g key={`connections-${layerIndex}`}>
+                {Array.from({ length: layer.size }).map((_, i) => (
+                  Array.from({ length: nextLayer.size }).map((_, j) => (
+                    <line
+                      key={`${layerIndex}-${i}-${j}`}
+                      x1={currentX + neuronSize / 2}
+                      y1={currentYBase + i * verticalSpacing + neuronSize / 2}
+                      x2={nextX + neuronSize / 2}
+                      y2={nextYBase + j * verticalSpacing + neuronSize / 2}
+                      stroke="#d1d5db"
+                      strokeWidth="1"
+                      opacity="0.6"
+                    />
+                  ))
+                ))}
+              </g>
+            );
+          })}
+
+          {layers.map((layer, layerIndex) => {
+            const x = 50 + layerIndex * layerSpacing;
+            const yBase = 50 + (maxNeurons - layer.size) * verticalSpacing / 2;
+            
+            return (
+              <g key={`layer-${layer.id}`}>
+                {Array.from({ length: layer.size }).map((_, i) => (
+                  <g key={`neuron-${layerIndex}-${i}`}>
+                    <rect
+                      x={x}
+                      y={yBase + i * verticalSpacing}
+                      width={neuronSize}
+                      height={neuronSize}
+                      rx={8}
+                      fill="white"
+                      stroke="#9ca3af"
+                      strokeWidth="2"
+                    />
+                    <text
+                      x={x + neuronSize / 2}
+                      y={yBase + i * verticalSpacing + neuronSize / 2 + 5}
+                      textAnchor="middle"
+                      fill="#6b7280"
+                      fontSize="12"
+                      fontWeight="normal"
+                    >
+                      {layerIndex === 0 ? 'I' : layerIndex === layers.length - 1 ? 'O' : 'H'}
+                    </text>
+                  </g>
+                ))}
+              </g>
+            );
+          })}
+
+          {layers.map((layer, index) => (
+            <text
+              key={`label-${layer.id}`}
+              x={50 + index * layerSpacing + neuronSize / 2}
+              y={30}
+              textAnchor="middle"
+              fill="#9ca3af"
+              fontSize="11"
+              fontWeight="300"
+            >
+              {index === 0 ? 'Input' : index === layers.length - 1 ? 'Output' : `${layer.size} neurons`}
+            </text>
+          ))}
+        </svg>
+      </div>
+
+      <div className="mt-12 text-center text-gray-500 text-sm font-light">
+        <p>Total parameters: {
+          layers.slice(0, -1).reduce((sum, layer, i) => {
+            const nextSize = layers[i + 1].size;
+            return sum + (layer.size * nextSize) + nextSize;
+          }, 0)
+        }</p>
+      </div>
+    </div>
+  );
+}
