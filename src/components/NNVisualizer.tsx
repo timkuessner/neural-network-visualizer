@@ -25,6 +25,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   );
 
   const addLayer = (index: number) => {
+    if (layers.length >= 9) return;
     const newLayer: LayerConfig = {
       id: `layer-${Date.now()}`,
       size: 3,
@@ -52,6 +53,12 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   const neuronSize = 40;
   const layerSpacing = 100;
   const verticalSpacing = 50;
+
+  const drawingWidth = (layers.length - 1) * layerSpacing + neuronSize;
+  const drawingHeight = maxNeurons * verticalSpacing;
+
+  const halfW = drawingWidth / 2;
+  const halfH = drawingHeight / 2;
 
   return (
     <div className="w-full min-h-screen bg-white p-8">
@@ -103,7 +110,8 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
           <button
             key={`add-${index}`}
             onClick={() => addLayer(index + 1)}
-            className="px-4 py-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-100 transition-colors text-sm font-light"
+            disabled={layers.length >= 9}
+            className="px-4 py-2 border border-gray-300 text-gray-600 rounded disabled:opacity-20 hover:bg-gray-100 transition-colors text-sm font-light"
           >
             + Layer after {index === 0 ? 'Input' : `H${index}`}
           </button>
@@ -112,19 +120,20 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
 
       <div className="flex justify-center overflow-x-auto">
         <svg
-          width={layers.length * layerSpacing + 100}
-          height={maxNeurons * verticalSpacing + 100}
+          width={drawingWidth + 100}
+          height={drawingHeight + 100}
+          viewBox={`${-halfW - 50} ${-halfH - 50} ${drawingWidth + 100} ${drawingHeight + 100}`}
           className="border border-gray-200 rounded-lg bg-white"
         >
           {layers.map((layer, layerIndex) => {
             if (layerIndex === layers.length - 1) return null;
             const nextLayer = layers[layerIndex + 1];
             
-            const currentX = 50 + layerIndex * layerSpacing;
-            const nextX = 50 + (layerIndex + 1) * layerSpacing;
-            
-            const currentYBase = 50 + (maxNeurons - layer.size) * verticalSpacing / 2;
-            const nextYBase = 50 + (maxNeurons - nextLayer.size) * verticalSpacing / 2;
+            const currentX = -halfW + layerIndex * layerSpacing;
+            const nextX = -halfW + (layerIndex + 1) * layerSpacing;
+
+            const currentYBase = -halfH + (maxNeurons - layer.size) * verticalSpacing / 2;
+            const nextYBase = -halfH + (maxNeurons - nextLayer.size) * verticalSpacing / 2;
 
             return (
               <g key={`connections-${layerIndex}`}>
@@ -147,8 +156,8 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
           })}
 
           {layers.map((layer, layerIndex) => {
-            const x = 50 + layerIndex * layerSpacing;
-            const yBase = 50 + (maxNeurons - layer.size) * verticalSpacing / 2;
+            const x = -halfW + layerIndex * layerSpacing;
+            const yBase = -halfH + (maxNeurons - layer.size) * verticalSpacing / 2;
             
             return (
               <g key={`layer-${layer.id}`}>
@@ -183,14 +192,18 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
           {layers.map((layer, index) => (
             <text
               key={`label-${layer.id}`}
-              x={50 + index * layerSpacing + neuronSize / 2}
-              y={30}
+              x={-halfW + index * layerSpacing + neuronSize / 2}
+              y={-halfH - 20}
               textAnchor="middle"
               fill="#9ca3af"
               fontSize="11"
               fontWeight="300"
             >
-              {index === 0 ? 'Input' : index === layers.length - 1 ? 'Output' : `${layer.size} neurons`}
+              {index === 0
+                ? 'Input'
+                : index === layers.length - 1
+                ? 'Output'
+                : `${layer.size} neurons`}
             </text>
           ))}
         </svg>
