@@ -16,7 +16,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
     initialLayers.length > 0 
       ? initialLayers 
       : [
-          { id: 'input', size: 1 },
+          { id: 'input', size: 2 },
           { id: 'h1', size: 3 },
           { id: 'h2', size: 3 },
           { id: 'h3', size: 3 },
@@ -61,15 +61,15 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   const halfH = drawingHeight / 2;
 
   return (
-    <div className="w-full min-h-screen bg-white p-8">
-      <h1 className="text-2xl font-light text-gray-800 mb-12 text-center">
-        Neural Network Architecture
+    <div className="w-full min-h-screen bg-neutral-900 p-8">
+      <h1 className="text-2xl font-light text-white mb-12 text-center">
+        Neural Network
       </h1>
 
       <div className="flex flex-wrap gap-6 justify-center mb-8">
         {layers.map((layer, index) => (
           <div key={layer.id} className="flex flex-col items-center gap-3">
-            <span className="text-xs text-gray-500 font-light">
+            <span className="text-neutral-500 text-sm font-light">
               {index === 0 ? 'Input' : index === layers.length - 1 ? 'Output' : `Hidden ${index}`}
             </span>
             
@@ -77,15 +77,15 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               <button
                 onClick={() => updateLayerSize(index, layer.size - 1)}
                 disabled={index === 0 || index === layers.length - 1 || layer.size <= 1}
-                className="w-7 h-7 rounded border border-gray-300 text-gray-600 disabled:opacity-20 hover:bg-gray-100 transition-colors text-sm"
+                className="w-7 h-7 rounded bg-neutral-800 text-neutral-500 disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm"
               >
                 −
               </button>
-              <span className="text-gray-700 w-8 text-center font-light">{layer.size}</span>
+              <span className="text-neutral-500 w-8 text-center font-light">{layer.size}</span>
               <button
                 onClick={() => updateLayerSize(index, layer.size + 1)}
                 disabled={index === 0 || index === layers.length - 1 || layer.size >= 8}
-                className="w-7 h-7 rounded border border-gray-300 text-gray-600 disabled:opacity-20 hover:bg-gray-100 transition-colors text-sm"
+                className="w-7 h-7 rounded bg-neutral-800 text-neutral-500 disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm"
               >
                 +
               </button>
@@ -95,7 +95,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               {index > 0 && index < layers.length - 1 && (
                 <button
                   onClick={() => removeLayer(index)}
-                  className="px-3 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:bg-gray-100 transition-colors"
+                  className="px-3 py-1 text-xs bg-neutral-800 text-neutral-500 rounded hover:bg-neutral-700 transition-colors"
                 >
                   Remove
                 </button>
@@ -111,7 +111,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
             key={`add-${index}`}
             onClick={() => addLayer(index + 1)}
             disabled={layers.length >= 9}
-            className="px-4 py-2 border border-gray-300 text-gray-600 rounded disabled:opacity-20 hover:bg-gray-100 transition-colors text-sm font-light"
+            className="px-4 py-2 bg-neutral-800 text-neutral-500 rounded disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm font-light"
           >
             + Layer after {index === 0 ? 'Input' : `H${index}`}
           </button>
@@ -123,7 +123,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
           width={drawingWidth + 100}
           height={drawingHeight + 100}
           viewBox={`${-halfW - 50} ${-halfH - 50} ${drawingWidth + 100} ${drawingHeight + 100}`}
-          className="border border-gray-200 rounded-lg bg-white"
+          className="bg-neutral-800 rounded-lg"
         >
           {layers.map((layer, layerIndex) => {
             if (layerIndex === layers.length - 1) return null;
@@ -145,7 +145,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
                       y1={currentYBase + i * verticalSpacing + neuronSize / 2}
                       x2={nextX + neuronSize / 2}
                       y2={nextYBase + j * verticalSpacing + neuronSize / 2}
-                      stroke="#d1d5db"
+                      stroke="#737373"
                       strokeWidth="1"
                       opacity="0.6"
                     />
@@ -169,15 +169,15 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
                       width={neuronSize}
                       height={neuronSize}
                       rx={8}
-                      fill="white"
-                      stroke="#9ca3af"
-                      strokeWidth="2"
+                      fill="#262626"
+                      stroke="#737373"
+                      strokeWidth="1.5"
                     />
                     <text
                       x={x + neuronSize / 2}
                       y={yBase + i * verticalSpacing + neuronSize / 2 + 5}
                       textAnchor="middle"
-                      fill="#6b7280"
+                      fill="#737373"
                       fontSize="12"
                       fontWeight="normal"
                     >
@@ -195,9 +195,9 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               x={-halfW + index * layerSpacing + neuronSize / 2}
               y={-halfH - 20}
               textAnchor="middle"
-              fill="#9ca3af"
-              fontSize="11"
-              fontWeight="300"
+              fill="#737373"
+              fontSize="14"
+              fontWeight="normal"
             >
               {index === 0
                 ? 'Input'
@@ -209,7 +209,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
         </svg>
       </div>
 
-      <div className="mt-12 text-center text-gray-500 text-sm font-light">
+      <div className="mt-12 text-center text-neutral-500 text-sm font-light">
         <p>Total parameters: {
           layers.slice(0, -1).reduce((sum, layer, i) => {
             const nextSize = layers[i + 1].size;
