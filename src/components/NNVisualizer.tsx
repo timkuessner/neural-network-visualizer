@@ -24,6 +24,8 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
         ]
   );
 
+  const [isTraining, setIsTraining] = useState(false);
+
   const addLayer = (index: number) => {
     if (layers.length >= 9) return;
     const newLayer: LayerConfig = {
@@ -47,6 +49,20 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
       i === index ? { ...layer, size: clampedSize } : layer
     );
     setLayers(newLayers);
+  };
+
+  const handleTrainingToggle = () => {
+    if (isTraining) {
+      console.log('Stop Training clicked');
+      setIsTraining(false);
+    } else {
+      console.log('Start Training clicked');
+      setIsTraining(true);
+    }
+  };
+
+  const handleTest = () => {
+    console.log('Test clicked');
   };
 
   const maxNeurons = Math.max(...layers.map(l => l.size));
@@ -178,8 +194,8 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
                       y={yBase + i * verticalSpacing + neuronSize / 2 + 5}
                       textAnchor="middle"
                       fill="#737373"
-                      fontSize="12"
-                      fontWeight="normal"
+                      fontSize="14"
+                      fontWeight="300"
                     >
                       {layerIndex === 0 ? 'I' : layerIndex === layers.length - 1 ? 'O' : 'H'}
                     </text>
@@ -197,7 +213,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               textAnchor="middle"
               fill="#737373"
               fontSize="14"
-              fontWeight="normal"
+              fontWeight="300"
             >
               {index === 0
                 ? 'Input'
@@ -207,6 +223,22 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
             </text>
           ))}
         </svg>
+      </div>
+      
+      <div className="flex justify-center gap-4 mt-8">
+        <button
+          onClick={handleTrainingToggle}
+          className="px-6 py-2 bg-neutral-800 text-neutral-500 rounded hover:bg-neutral-700 transition-colors text-sm font-light"
+        >
+          {isTraining ? 'Stop Training' : 'Start Training'}
+        </button>
+        <button
+          onClick={handleTest}
+          disabled={isTraining}
+          className="px-6 py-2 bg-neutral-800 text-neutral-500 rounded hover:bg-neutral-700 transition-colors text-sm font-light disabled:opacity-20"
+        >
+          Test
+        </button>
       </div>
 
       <div className="mt-12 text-center text-neutral-500 text-sm font-light">
