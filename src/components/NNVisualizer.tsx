@@ -274,7 +274,6 @@ export default function NNVisualizer({
 
                         return (
                           <g key={`neuron-${layerIndex}-${i}`}>
-                            {/* Background rounded square */}
                             <rect
                               x={neuronX}
                               y={neuronY}
@@ -282,12 +281,9 @@ export default function NNVisualizer({
                               height={neuronSize}
                               rx={8}
                               fill="#262626"
-                              stroke="#737373"
-                              strokeWidth="1.5"
                             />
 
                             {showImage ? (
-                              // Display test image clipped to rounded square
                               <g>
                                 <defs>
                                   <clipPath id={`clip-${layerIndex}-${i}`}>
@@ -311,7 +307,6 @@ export default function NNVisualizer({
                                 />
                               </g>
                             ) : (
-                              // Display text label (I, H, O)
                               <text
                                 x={neuronX + neuronSize / 2}
                                 y={neuronY + neuronSize / 2 + 5}
@@ -327,6 +322,17 @@ export default function NNVisualizer({
                                     : "H"}
                               </text>
                             )}
+
+                            <rect
+                              x={neuronX}
+                              y={neuronY}
+                              width={neuronSize}
+                              height={neuronSize}
+                              rx={8}
+                              fillOpacity={0}
+                              stroke="#737373"
+                              strokeWidth="1.5"
+                            />
                           </g>
                         );
                       })}
