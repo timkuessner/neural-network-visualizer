@@ -1,4 +1,4 @@
-import NNVisualizer from '@/components/NNVisualizer';
+import NNVisualizer from "@/components/NNVisualizer";
 
 export default function Home() {
   return (

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { NeuralNetworkEngine } from '@/lib/nn/engine';
+import React, { useEffect, useRef, useState } from "react";
+import { NeuralNetworkEngine } from "@/lib/nn/engine";
 
 interface LayerConfig {
   id: string;
@@ -12,25 +12,65 @@ interface NNVisualizerProps {
   initialLayers?: LayerConfig[];
 }
 
-export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) {
+export default function NNVisualizer({
+  initialLayers = [],
+}: NNVisualizerProps) {
   const [layers, setLayers] = useState<LayerConfig[]>(
-    initialLayers.length > 0 
-      ? initialLayers 
+    initialLayers.length > 0
+      ? initialLayers
       : [
-          { id: 'input', size: 2 },
-          { id: 'h1', size: 3 },
-          { id: 'h2', size: 3 },
-          { id: 'h3', size: 3 },
-          { id: 'output', size: 1 },
-        ]
+          { id: "input", size: 2 },
+          { id: "h1", size: 3 },
+          { id: "h2", size: 3 },
+          { id: "h3", size: 3 },
+          { id: "output", size: 1 },
+        ],
   );
 
+  const pixelsToDataUrl = (pixels: number[], size: number = 8): string => {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    const imageData = ctx.createImageData(size, size);
+
+    for (let i = 0; i < pixels.length; i++) {
+      const value = pixels[i];
+      imageData.data[i * 4] = value;
+      imageData.data[i * 4 + 1] = value;
+      imageData.data[i * 4 + 2] = value;
+      imageData.data[i * 4 + 3] = 255;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL();
+  };
+
+  const [testImages, setTestImages] = useState<string[][] | null>(null);
   const [isTraining, setIsTraining] = useState(false);
   const engineRef = useRef<NeuralNetworkEngine | null>(null);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      if (engineRef.current) {
+        const testData = engineRef.current.getTest();
+        if (testData) {
+          const imageUrls = testData.map((layer) =>
+            layer.map((neuronPixels) => pixelsToDataUrl(neuronPixels)),
+          );
+          setTestImages(imageUrls);
+        } else {
+          setTestImages(null);
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     engineRef.current = new NeuralNetworkEngine({ layers });
-    console.log('Neural network engine initialized');
+    console.log("Neural network engine initialized");
 
     return () => {
       if (engineRef.current) {
@@ -65,7 +105,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   const updateLayerSize = (index: number, newSize: number) => {
     const clampedSize = Math.max(1, Math.min(8, newSize));
     const newLayers = layers.map((layer, i) =>
-      i === index ? { ...layer, size: clampedSize } : layer
+      i === index ? { ...layer, size: clampedSize } : layer,
     );
     setLayers(newLayers);
   };
@@ -83,10 +123,10 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   };
 
   const handleTest = () => {
-    console.log('Test clicked');
+    console.log("Test clicked");
   };
 
-  const maxNeurons = Math.max(...layers.map(l => l.size));
+  const maxNeurons = Math.max(...layers.map((l) => l.size));
   const neuronSize = 40;
   const layerSpacing = 100;
   const verticalSpacing = 50;
@@ -107,21 +147,37 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
         {layers.map((layer, index) => (
           <div key={layer.id} className="flex flex-col items-center gap-3">
             <span className="text-neutral-500 text-sm font-light">
-              {index === 0 ? 'Input' : index === layers.length - 1 ? 'Output' : `Hidden ${index}`}
+              {index === 0
+                ? "Input"
+                : index === layers.length - 1
+                  ? "Output"
+                  : `Hidden ${index}`}
             </span>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateLayerSize(index, layer.size - 1)}
-                disabled={index === 0 || index === layers.length - 1 || layer.size <= 1 || isTraining}
+                disabled={
+                  index === 0 ||
+                  index === layers.length - 1 ||
+                  layer.size <= 1 ||
+                  isTraining
+                }
                 className="w-7 h-7 rounded bg-neutral-800 text-neutral-500 disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm"
               >
                 −
               </button>
-              <span className="text-neutral-500 w-8 text-center font-light">{layer.size}</span>
+              <span className="text-neutral-500 w-8 text-center font-light">
+                {layer.size}
+              </span>
               <button
                 onClick={() => updateLayerSize(index, layer.size + 1)}
-                disabled={index === 0 || index === layers.length - 1 || layer.size >= 8 || isTraining}
+                disabled={
+                  index === 0 ||
+                  index === layers.length - 1 ||
+                  layer.size >= 8 ||
+                  isTraining
+                }
                 className="w-7 h-7 rounded bg-neutral-800 text-neutral-500 disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm"
               >
                 +
@@ -151,7 +207,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
             disabled={layers.length >= 9 || isTraining}
             className="px-4 py-2 bg-neutral-800 text-neutral-500 rounded disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm font-light"
           >
-            + Layer after {index === 0 ? 'Input' : `H${index}`}
+            + Layer after {index === 0 ? "Input" : `H${index}`}
           </button>
         ))}
       </div>
@@ -166,16 +222,18 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
           {layers.map((layer, layerIndex) => {
             if (layerIndex === layers.length - 1) return null;
             const nextLayer = layers[layerIndex + 1];
-            
+
             const currentX = -halfW + layerIndex * layerSpacing;
             const nextX = -halfW + (layerIndex + 1) * layerSpacing;
 
-            const currentYBase = -halfH + (maxNeurons - layer.size) * verticalSpacing / 2;
-            const nextYBase = -halfH + (maxNeurons - nextLayer.size) * verticalSpacing / 2;
+            const currentYBase =
+              -halfH + ((maxNeurons - layer.size) * verticalSpacing) / 2;
+            const nextYBase =
+              -halfH + ((maxNeurons - nextLayer.size) * verticalSpacing) / 2;
 
             return (
               <g key={`connections-${layerIndex}`}>
-                {Array.from({ length: layer.size }).map((_, i) => (
+                {Array.from({ length: layer.size }).map((_, i) =>
                   Array.from({ length: nextLayer.size }).map((_, j) => (
                     <line
                       key={`${layerIndex}-${i}-${j}`}
@@ -187,42 +245,94 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
                       strokeWidth="1"
                       opacity="0.6"
                     />
-                  ))
-                ))}
+                  )),
+                )}
               </g>
             );
           })}
 
           {layers.map((layer, layerIndex) => {
             const x = -halfW + layerIndex * layerSpacing;
-            const yBase = -halfH + (maxNeurons - layer.size) * verticalSpacing / 2;
-            
+            const yBase =
+              -halfH + ((maxNeurons - layer.size) * verticalSpacing) / 2;
+
             return (
               <g key={`layer-${layer.id}`}>
-                {Array.from({ length: layer.size }).map((_, i) => (
-                  <g key={`neuron-${layerIndex}-${i}`}>
-                    <rect
-                      x={x}
-                      y={yBase + i * verticalSpacing}
-                      width={neuronSize}
-                      height={neuronSize}
-                      rx={8}
-                      fill="#262626"
-                      stroke="#737373"
-                      strokeWidth="1.5"
-                    />
-                    <text
-                      x={x + neuronSize / 2}
-                      y={yBase + i * verticalSpacing + neuronSize / 2 + 5}
-                      textAnchor="middle"
-                      fill="#737373"
-                      fontSize="14"
-                      fontWeight="300"
-                    >
-                      {layerIndex === 0 ? 'I' : layerIndex === layers.length - 1 ? 'O' : 'H'}
-                    </text>
-                  </g>
-                ))}
+                {layers.map((layer, layerIndex) => {
+                  const x = -halfW + layerIndex * layerSpacing;
+                  const yBase =
+                    -halfH + ((maxNeurons - layer.size) * verticalSpacing) / 2;
+                  const hasTestImages = testImages && testImages[layerIndex];
+
+                  return (
+                    <g key={`layer-${layer.id}`}>
+                      {Array.from({ length: layer.size }).map((_, i) => {
+                        const neuronX = x;
+                        const neuronY = yBase + i * verticalSpacing;
+                        const showImage =
+                          hasTestImages && testImages![layerIndex][i];
+
+                        return (
+                          <g key={`neuron-${layerIndex}-${i}`}>
+                            {/* Background rounded square */}
+                            <rect
+                              x={neuronX}
+                              y={neuronY}
+                              width={neuronSize}
+                              height={neuronSize}
+                              rx={8}
+                              fill="#262626"
+                              stroke="#737373"
+                              strokeWidth="1.5"
+                            />
+
+                            {showImage ? (
+                              // Display test image clipped to rounded square
+                              <g>
+                                <defs>
+                                  <clipPath id={`clip-${layerIndex}-${i}`}>
+                                    <rect
+                                      x={neuronX}
+                                      y={neuronY}
+                                      width={neuronSize}
+                                      height={neuronSize}
+                                      rx={8}
+                                    />
+                                  </clipPath>
+                                </defs>
+                                <image
+                                  href={testImages![layerIndex][i]}
+                                  x={neuronX}
+                                  y={neuronY}
+                                  width={neuronSize}
+                                  height={neuronSize}
+                                  preserveAspectRatio="xMidYMid slice"
+                                  clipPath={`url(#clip-${layerIndex}-${i})`}
+                                />
+                              </g>
+                            ) : (
+                              // Display text label (I, H, O)
+                              <text
+                                x={neuronX + neuronSize / 2}
+                                y={neuronY + neuronSize / 2 + 5}
+                                textAnchor="middle"
+                                fill="#737373"
+                                fontSize="14"
+                                fontWeight="300"
+                              >
+                                {layerIndex === 0
+                                  ? "I"
+                                  : layerIndex === layers.length - 1
+                                    ? "O"
+                                    : "H"}
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })}
               </g>
             );
           })}
@@ -238,38 +348,32 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               fontWeight="300"
             >
               {index === 0
-                ? 'Input'
+                ? "Input"
                 : index === layers.length - 1
-                ? 'Output'
-                : `${layer.size} neurons`}
+                  ? "Output"
+                  : `${layer.size} neurons`}
             </text>
           ))}
         </svg>
       </div>
-      
+
       <div className="flex justify-center gap-4 mt-8">
         <button
           onClick={handleTrainingToggle}
           className="px-6 py-2 bg-neutral-800 text-neutral-500 rounded hover:bg-neutral-700 transition-colors text-sm font-light"
         >
-          {isTraining ? 'Stop Training' : 'Start Training'}
-        </button>
-        <button
-          onClick={handleTest}
-          disabled={isTraining}
-          className="px-6 py-2 bg-neutral-800 text-neutral-500 rounded hover:bg-neutral-700 transition-colors text-sm font-light disabled:opacity-20"
-        >
-          Test
+          {isTraining ? "Stop Training" : "Start Training"}
         </button>
       </div>
 
       <div className="mt-12 text-center text-neutral-500 text-sm font-light">
-        <p>Total parameters: {
-          layers.slice(0, -1).reduce((sum, layer, i) => {
+        <p>
+          Total parameters:{" "}
+          {layers.slice(0, -1).reduce((sum, layer, i) => {
             const nextSize = layers[i + 1].size;
-            return sum + (layer.size * nextSize) + nextSize;
-          }, 0)
-        }</p>
+            return sum + layer.size * nextSize + nextSize;
+          }, 0)}
+        </p>
       </div>
     </div>
   );
