@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { NeuralNetworkEngine } from '@/lib/nn/engine';
 
 interface LayerConfig {
   id: string;
@@ -25,6 +26,24 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   );
 
   const [isTraining, setIsTraining] = useState(false);
+  const engineRef = useRef<NeuralNetworkEngine | null>(null);
+
+  useEffect(() => {
+    engineRef.current = new NeuralNetworkEngine({ layers });
+    console.log('Neural network engine initialized');
+
+    return () => {
+      if (engineRef.current) {
+        engineRef.current.stopTraining();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.updateConfig({ layers });
+    }
+  }, [layers]);
 
   const addLayer = (index: number) => {
     if (layers.length >= 9) return;
@@ -52,11 +71,13 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
   };
 
   const handleTrainingToggle = () => {
+    if (!engineRef.current) return;
+
     if (isTraining) {
-      console.log('Stop Training clicked');
+      engineRef.current.stopTraining();
       setIsTraining(false);
     } else {
-      console.log('Start Training clicked');
+      engineRef.current.startTraining();
       setIsTraining(true);
     }
   };
@@ -92,7 +113,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => updateLayerSize(index, layer.size - 1)}
-                disabled={index === 0 || index === layers.length - 1 || layer.size <= 1}
+                disabled={index === 0 || index === layers.length - 1 || layer.size <= 1 || isTraining}
                 className="w-7 h-7 rounded bg-neutral-800 text-neutral-500 disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm"
               >
                 −
@@ -100,7 +121,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               <span className="text-neutral-500 w-8 text-center font-light">{layer.size}</span>
               <button
                 onClick={() => updateLayerSize(index, layer.size + 1)}
-                disabled={index === 0 || index === layers.length - 1 || layer.size >= 8}
+                disabled={index === 0 || index === layers.length - 1 || layer.size >= 8 || isTraining}
                 className="w-7 h-7 rounded bg-neutral-800 text-neutral-500 disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm"
               >
                 +
@@ -111,7 +132,8 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
               {index > 0 && index < layers.length - 1 && (
                 <button
                   onClick={() => removeLayer(index)}
-                  className="px-3 py-1 text-xs bg-neutral-800 text-neutral-500 rounded hover:bg-neutral-700 transition-colors"
+                  disabled={isTraining}
+                  className="px-3 py-1 text-xs bg-neutral-800 text-neutral-500 rounded disabled:opacity-20 hover:bg-neutral-700 transition-colors"
                 >
                   Remove
                 </button>
@@ -126,7 +148,7 @@ export default function NNVisualizer({ initialLayers = [] }: NNVisualizerProps) 
           <button
             key={`add-${index}`}
             onClick={() => addLayer(index + 1)}
-            disabled={layers.length >= 9}
+            disabled={layers.length >= 9 || isTraining}
             className="px-4 py-2 bg-neutral-800 text-neutral-500 rounded disabled:opacity-20 hover:bg-neutral-700 transition-colors text-sm font-light"
           >
             + Layer after {index === 0 ? 'Input' : `H${index}`}

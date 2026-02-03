@@ -1,6 +1,13 @@
-export type Vec2 = [number, number];
+export interface LayerConfig {
+  id: string;
+  size: number;
+}
 
-export interface DataPoint {
-    input: Vec2;
-    label: 0 | 1;
+export interface NeuralNetworkConfig {
+  layers: LayerConfig[];
+}
+
+export interface TrainingState {
+  isTraining: boolean;
+  epoch: number;
 }
